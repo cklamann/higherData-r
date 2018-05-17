@@ -1,0 +1,42 @@
+my_cip,cip_code,cip_start,cip_end,field
+1,1.xx,1,1.9999,Agriculture
+3,3.xx,2,2.9999,Environmental Studies
+4,4.xx,4,4.9999,Architecture
+5,5.xx,5,5.9999,Area Studies
+6,6.xx,6,6.9999,Communication
+7,7.xx,7,7.9999,Communication Technology
+11,11.xx,11,11.9999,Computer Science
+12.1,12.040-12.049,12.04,12.049,Cosmetology
+12.2,12.05-12.9999,12.05,12.9999,Culinary Arts
+13,13.xx,13,13.9999,Education
+14,14.xx,14,14.9999,Engineering
+15,15.xx,15,15.9999,Engineering Technican
+16,16.xx,16,16.9999,Languages and Literature
+19,19.xx,19,19.9999,Work and Family Studies
+22,22.xx,22,22.9999,Legal Studies
+23,23.xx,23,23.9999,English
+24,24.xx,24,24.9999,Liberal Arts
+26,26.xx,26,26.9999,Biology
+27,27.xx,27,27.9999,Mathematics
+31,31.xx,31,31.9999,Parks and Recreation
+38.1,38.00-38.0199,38,38.0199,Philosophy
+38.2,38.02-38.9999,38.02,38.9999,Religious Studies
+39,39.xx,39,39.9999,Theology
+40,40.xx,40,40.9999,Natural Sciences (various)
+41,41.xx,41,41.9999,Science Technician
+42,42.xx,42,42.9999,Psychology
+43,43.xx,43,43.9999,Criminal Justice
+44,44.xx,44,44.9999,Social Work
+45.1,45.00-45.0299,45,45.0299,Anthropology
+45.2,45.0401,45.0401,45.0401,Criminology
+45.3,45.0601-45.0699,45.0601,45.0699,Economics
+45.4,45.0701-45.0799,45.0701,45.0799,Geography
+45.5,45.0901-45.1099,45.0901,45.1099,Political Science
+45.6,45.1101,45.1101,45.1101,Sociology
+46,46.xx,46,46.9999,Construction Technician
+47,47.xx - 48.xx,47,47.9999,Repair Technician
+49,49.xx,49,49.9999,Transportation 
+50,50.xx,50,50.9999,Fine Arts
+51,51.xx,51,51.9999,Health Sciences
+52,52.xx,52,52.9999,Business
+54,54.xx,54,54.9999,History

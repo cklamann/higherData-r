@@ -1,0 +1,147 @@
+//Simple time series:
+
+ggplot(schools[INSTNM=="New York University"],aes(fall_year,value)) 
+	+ geom_line(color="firebrick") 
+	+ geom_point(color="firebrick") 
+	+ scale_y_continuous(name="",labels=dollar,breaks=seq(min(to_graph[,value]),max(to_graph[,value]),(max(to_graph[,value])-min(to_graph[,value]))/10))
+	+ scale_x_continuous(name="Fall Period",breaks=c(2001:2014),labels=c(2001:2014))
+	+ labs(title="NYU Undergraduate PLUS Loan Revenue") 
+	+ theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1),axis.text.y=element_text(size=10))
+
+//one variable, many schools (simple)
+ggplot(my_schools,aes(fall_year,value,group=INSTNM,color=INSTNM)) 
+	+ geom_line() 
+	+ scale_y_continuous(name="",labels=dollar,breaks = seq(my_min,my_max,(my_max-my_min)/10)) 
+	+ scale_x_continuous(name="Fall Period",breaks=2001:2014) 
+	+ theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1)) 
+	+ scale_colour_hue(name = "School")
+
+//this is a prettier version, with dashed lines for graphs with large numbers of lines and pretty_breaks()
+ggplot(real_net_assets[School!="New York University" & unitid %in% real_net_asset_change[value>1.5,unitid]],aes(fall_year,value,group=School,color=School,linetype=School)) 
+	+ geom_line(size=1) #thicken out the line 
+	+ scale_y_continuous(name="Unrestricted Net Assests (in millions)",labels=function(x)floor(x/100000),breaks = seq(my_min,my_max,(my_max-my_min)/10))  + scale_x_continuous(name="Fall Period",breaks=pretty_breaks(n=7)) + theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1)) 
+	+ scale_linetype_manual(values = c(rep("solid", 7), rep("dashed", 8))) #manually split scale_linetype between total number of lines
+	+ ggtitle("Unrestricted Net Asset Growth, 2002-2013")
+
+//very pretty line chart with legend at bottom:
+ggplot(real_net_assets[School!="New York University" & unitid %in% real_net_asset_change[value>1.5,unitid]],aes(fall_year,value,group=School,color=School,linetype=School)) 
+	+ geom_line(size=1) 
+	+ scale_y_continuous(name="Unrestricted Net Assests (in millions)",labels=function(x)floor(x/100000),breaks = seq(my_min,my_max,(my_max-my_min)/10)) 
+	+ scale_x_continuous(name="Fall Period",breaks=pretty_breaks(n=7)) 
+	+ theme(axis.text.x = element_text(size = 10, angle = 45, hjust = 1), legend.position="bottom",legend.title=element_blank()) 
+	+ scale_linetype_manual(values = c(rep("solid", 7), rep("dashed", 8))) #split the dashed from the solid 
+	+ ggtitle("Unrestricted Net Asset Growth, 2002-2013") 
+	+ guides(linetype=guide_legend(ncol=2,bycol=TRUE)) #make legend 2 columns
+
+//nice line chart with breaks and caption and lots of theme() work
+geom_line(color="firebrick") 
++ geom_point(color="firebrick") 
++ scale_y_continuous(name=element_blank(),labels=makeYLabels,breaks=seq(low_val,high_val,gap/10)) 
++ scale_x_continuous(name="Academic Year",breaks=years,labels=makeXLabels(years)) 
++ labs(title=paste0("Undergraduate PLUS Loan Revenue\n",name),subtitle="*All values in 2016 dollars",caption = "Source: Federal Student Aid") 
++ theme(axis.text.x = element_text(size = 9, angle = 50, hjust = 1),axis.text.y=element_text(size=9), plot.caption = element_text(size = rel(.6)), plot.title = element_text(size=rel(1.1),color="firebrick"), plot.subtitle = element_text(size=rel(.6)), plot.margin = unit(c(1,1,1,0),"mm"))
+
+//scatterplot with smoother and labels
+ggplot(real_plus_and_assets[fall_year==2013 & unitid %in% working_set[,unitid] & net_assets<1000000000],aes(net_assets,plus)) 
+	+ geom_point(size=3,alpha=.5) 
+	+ scale_x_continuous(name="Net Assets",breaks=pretty_breaks(n=3),labels = dollar) 
+	+ scale_y_continuous(name="Undergraduate PLUS Revenue",breaks=pretty_breaks(n=5),labels = dollar) 
+	+ ggtitle("PLUS Revenue vs. Unrestricted Net Assets for Top-25 Per-Pupil PLUS Schools, 2013-14") 
+	+ geom_label(label=real_plus_and_assets[fall_year==2013 & unitid %in% working_set[,unitid] & net_assets<1000000000,unitid], vjust=1) #put label on plots, adjust offset 
+	+ geom_smooth(method="auto", se=TRUE, fullrange=FALSE, level=0.95)
+
+//simple comparison barplot
+ggplot(data=data,aes(x=label,y=value, fill=factor(value))) 
+  + geom_bar(stat="identity") 
+  + labs(title="Cost of Study Aborad", subtitle="In Ghana, through Macalester College") 
+  + xlab("") //remove axis labels
+  + ylab("") 
+  + scale_y_continuous(breaks=pretty_breaks(), labels=dollar) 
+  + guides(fill=FALSE) //remove legend
+	
+//prettier barplot
+ggplot(data=melt_table[name=="Loyola University Chicago"],aes(x=variable,y=Growth,fill=Growth))
+	+ geom_bar(stat="identity") 
+	+ scale_y_continuous(labels=percent,breaks=pretty_breaks(n=6)) 
+	+ labs(title="Loyola Chicago Finance, 2003-2013",subtitle="Test") 
+	+ scale_x_discrete(name="") 
+	+ guides(fill=FALSE) #remove color gradient legend
+	+ theme(plot.title = element_text(size=18)) #increase title size
+	
+//this will give you a side-by-side barplot
+ggplot(data=melt_combined_subset,aes(x=INSTNM,y=value,fill=variable)) 
+	+ geom_bar(stat="identity",position=position_dodge())
+	
+//better side-by-side
+ggplot(data=meltNames,aes(x=major,y=value, fill=as.factor(fy))) #note as.factor()
++ scale_x_discrete(name="") #remove x label
++ scale_y_continuous(breaks=pretty_breaks(), labels = comma,name="Degrees Awarded") + geom_bar(stat="identity",position="dodge") 
++ theme(axis.text.x = element_text(angle = 45, hjust = 1)) #tilt labels
++ scale_fill_discrete(name="Award Year") #change legend title
++ ggtitle(label="US Undergraduate Education Degrees")
+
+
+//histogram with 2 datasets, a legend, and 2 median lines
+ggplot(total_net_assets,aes(x=value, group=fall_year,fill=factor(fall_year))) 
++ geom_histogram(position="identity",alpha=.5,bins=1000) + scale_x_continuous(name="Total Net Assets", labels=dollar, breaks=pretty_breaks(n=10)) + scale_y_continuous(name="Count") 
++ theme(axis.text.x = element_text(size = 8, angle = 40, hjust = 1),plot.caption=element_text(size=rel(.6))) 
++ labs(title="Total Net Assets",subtitle = "USA Public Universities",caption="numbers not adjusted for inflation") + scale_fill_manual(name="Fiscal Year",values=c("red","blue")) + geom_vline(xintercept = median(total_net_assets[fall_year==2014,value],na.rm=T),color="blue",alpha=.5,labels="2014 median",show_guide=F) 
++ geom_vline(xintercept = median(total_net_assets[fall_year==2013,value],na.rm=T),color="red",alpha=.5,labels="2013 median",show_guide=F) 
++ coord_cartesian(xlim=c(-100000000,1500000000))
+
+
+
+//dataArtsCharts
+
+//for below, need to do something like setDT(as.data.frame(table(cleanData[,gender]))) to shape it
+
+//also note that you'll need to reorder the factors to get the bars to display in the order you want. At the simplest level,
+//you can do it manually like this:
+//genderTable[,gender:= reorder(genderTable[,gender],c(1,2,3,4,5),function(x) x)]
+//trick, it seems, is getting second argument in correct order -- should be able to do that programmatically
+//alternately could just set order when you factor, like this:
+//vec1<-factor(vec1,levels<-c(4,3,1,2), again, it assumes you know that 4 has the most elements, followed by 3 and so on
+
+//this seems to work: 
+//names(sort(table(vec2),decreasing = T))
+
+
+ggplot(genderTable) 
++ geom_bar(stat = "identity", aes(y=count, x=factor(gender,levels=names(sort(table(vec2),decreasing = T))),fill=factor(gender))) 
++ scale_x_discrete(name="")  
++ scale_y_continuous(name="count") 
++ scale_fill_discrete(name="Gender") 
++ theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
++ geom_text(stat = 'identity',aes(x=gender,y=count), label=paste0(round(genderTable[,pct] * 100,2),"%"),nudge_y = 120)
+
+
+
+shit below doesn't really work
+
+//this seems to do the trick: reorder(levels(vec1),setorder(as.data.table(melt(table(vec1))),-value)[,vec1], function(x) x)
+//bingo on the above
+//could also set the levels when you build the factor like so:
+//vec1<-factor(vec1,levels<-setorder(as.data.table(melt(table(vec1))),-value)[,vec1])
+
+fuckin nope on the above
+
+
+
+//but that's only if the data is already sorted -- i.e., you know that 1 corresponds to the largest factor, etc.
+//also, add a pct column to dataset
+
+//stacked bar -- problem is that it's ugly, but easy 
+ggplot(genderTable) 
++ geom_bar(stat = "identity", aes(y=count, x="",fill=factor(gender))) 
++ scale_x_discrete(name="")  
++ scale_y_continuous(name="count") 
++ scale_fill_discrete(name="Gender")
+
+//side by side  
+ggplot(genderTable) 
++ geom_bar(stat = "identity", aes(y=count, x=gender,fill=factor(gender))) 
++ scale_x_discrete(name="") 
++ scale_y_continuous(name="count") 
++ scale_fill_discrete(name="Gender") 
++ theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
++ geom_text(stat = 'identity',aes(x=gender,y=count), label=paste0(round(genderTable[,pct] * 100,2),"%"), nudge_y = 120)

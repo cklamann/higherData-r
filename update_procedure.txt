@@ -1,0 +1,88 @@
+Updating procedure:
+
+
+When melting from a wide MySQL or Excel table
+
+1) Import it. 
+2) Make sure NULLS are NAs
+3) Run the melt_and_merge() if this is the first time the variable is being used
+4) Make sure that there are no empty strings instead of NAs
+	a. if there are run: as.data.table(rapply(dataTable, f=function(x) ifelse(x=="",NA,x), how="replace"))
+5) convert NAs to "NULL" (Use melted[is.na(melted)]<-"NULL")
+6) run update_graph_data() -- this works -- in future should push directly to server to avoid reaching 50 mb limit.
+
+When updating and melting
+
+1) Backup master MySQL
+2) Don't delete anything from MySQL
+3) run get and filter functions for latest year, 
+4) get medians using getAllMeds() and then rbind them to filtered table
+5) melt them with melt_and_merge() if this is a new variable or just_melt() if updating
+  --If adding a new year, then pull long table, filter out one year, set it to new year, set values to "NULL" and upload, then update. (Quicker than all_unique_keys mess).  
+6) convert NA values to "NULL." (Use melted[is.na(melted)]<-"NULL")
+7) Make sure that the variable names are the same as the variable names in graph_data
+8) run update() 
+
+When updating based on _rv files
+
+1) Get the table or old big_one for the year(s) in question and save it in memory 
+2) pull the _rv table, which you can do using averaging.getRevised() or by just adding _rv to the name in gettable(). Overwrite old table.
+3) Run the filter and get the medians of the new table.
+4) dplyr.anti_join the old and new, with new as the first argument--this will return just the values that changed.
+5) bind the new_meds and the table that resulted from the anti join.
+6) run just_melt() on the new table, since you don't need to pull in blank years, and change NAs to "NULL". 
+7) UPDATE MySQL
+
+Constraints
+
+1) There is a foreign key constraint on graph_data. The variable must have a value in graph_variables and a line assignment before the data can be inserted
+(Unless you disable the purge() statement in the update_graph_data/insert_graph_data). But last time shit got inserted anyway. Hm.
+ 
+The line assignment tells the application to pull it when a graph is selected. When a variable_name is deleted from graph_variables, all data associated 
+with that variable will be deleted from graph_data--EVEN IF THERE ARE MULTIPLE VARIABLES in the lookup table with that name!. So beware!
+
+2) There is a foerign key constraint on graph_lines.graph_id. Each graph_line must be associated with a graph. If the graph is deleted, so is the line, and so
+is the graph_variable, and so is the graph_data.
+
+3) Data model synopsis: Each college has many graphs. Each graph is composed of many lines. Each line is composed of one or many variables. 
+Each college is linked to data in graph_data. Graph_data has a foreign key (unitid) to colleges, and if a college is deleted, so is the data.
+The graphs are linked to the lines
+by graph_id, with graph_id being the foreign key and line_id being the primary key. Variables are linked to lines and graph_data in graph_variables,
+with line_id being the foreign key to graph_lines and variable_name being the foreign key to graph_data. In most cases, there is one
+variable per line. The PHP default behavior is to assume this and graph each line that corresponds to a given graph. If there is more than
+one variable in a line (i.e., if graph_variables has more than one variable for one line_id), then a special encoder is needed to perform
+further operations. 
+
+WHEN INSERTING FROM FINANCE
+
+1) keep in mind that the first time you bring a new variable in you'll need to melt_and_merge. This
+will create nulls for all the schools that aren't in that first batch (private or public, depending 
+on the order). Then just_melt() the next batch. 
+
+PROCEDURE FOR LOOKING FOR ABBERATIONS
+
+1) Pull in the molten data BIGTABLE or whatever
+2) If it's money, run makeLotsReal() on it 
+3) Run checkChange on that
+	i. if you want biggest 1-year increase, abrupt=TRUE
+	ii. if you want to measure discrepancy between max and min, use biggest=TRUE
+	iii. if you want to measure discrepancy between first and last year, use first_last=TRUe
+4) Then subset the results to those for which value>0
+	i. this will return a vector of unique id's and change ratios
+	ii. <1 is a drop; >1 is an increase; 
+5) make sure original BIGTABLE has INSTNM merged into it
+6) setorder(-value) of real_problem subset to get the biggest offenders on top
+6) run the ggplot2() function:
+	qplot(x = fall_year,y = value,data = BIGTABLE[unitid %in% FLAGGED[,unitid]], geom = "line",group=1)+facet_wrap(~INSTNM+unitid,scales="free")
+			i. if it's a big set, can just return to the top few results or filter based on some other
+				criteria either in BIGTABLE or merged into BIGTABLE head(n=150 is good)
+			ii. note that ggplot2 looks at factors for facet order, so you might subset the values
+				you want before passing them to the graph function.
+				
+How I changed the lines comprising the fedLoans chart:
+
+1. create new graph called sub_unsub and give it an id (#17):
+INSERT INTO `wordpress_2`.`graphs` (`graph`, `slug`, `graph_id`, `category`, `active`, `source_table`, `source_file`, `rv_up_to`, `pulldown`, `notes`, `tool_tip`) VALUES ('Federal Undergraduate Loans', 'federal-loans', '17', 'loans', 'n', 'https://studentaid.ed.gov/sa/about/data-center/student/title-iv > Loan Volume', 'Direct Loans before AY 2007: https://studentaid.ed.gov/sites/default/files/fsawg/datacenter/library/DL_AwardYr_Summary_AY20yy_20yy_All.xls / Direct Loans afterward: https://studentaid.ed.gov/sites/default/files/fsawg/datacenter/library/DL_Dashboard_AY20yy_20yy_Qn.xls. FFEL Loans before AY 2007: https://studentaid.ed.gov/sites/default/files/fsawg/datacenter/library/FFEL_AwardYr_Summary_AY20yy_20yy_All.xls / FFEL loans afterward: https://studentaid.ed.gov/sites/default/files/fsawg/datacenter/library/FFEL_Dashboard_AY20yy_20yy_Qn.xls', NULL, NULL, 'inactive', '$');
+2. Cut and paste descriptions and notes from other graphs.
+3. Associate sub and unsub lines with new graph. 
+				
