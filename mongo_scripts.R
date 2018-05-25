@@ -6,6 +6,18 @@ connectMongo <- function(collection,db){
   mongo(collection = collection, db= db,url = url)
 }
 
+
+updateSchoolData<-function(dt,conn){
+  apply(dt,1,.updateSchoolData, conn)
+}
+
+.updateSchoolData<-function(row,conn){
+  query<-paste0('{"unitid":"',row[['unitid']],'","fiscal_year":"',row[['fiscal_year']],'","variable":"',row[['variable']],'"}')
+  updateStatemnt = paste0('{"$set":{"unitid":"',row[['unitid']],'","fiscal_year":"',row[['fiscal_year']],'","variable":"',row[['variable']],
+                            '","instnm":"',row[['instnm']],'","state":"',row[['state']],'","sector":"',row[['sector']],'","value":',row[['value']],'}}')
+  conn$update(query, update = updateStatemnt, upsert = TRUE, multiple = FALSE)
+}
+
 updateMongoData<-function(connection,dt){
   #connection should be to schools table
   setDT(dt)
