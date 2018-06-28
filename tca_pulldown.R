@@ -3,8 +3,11 @@
 
 #ICYYYY_AY
 #yyyy refers to academic year, adjusted to fiscal year in filter function
+
+#2009-2012 files are fucked (no unitid), have to manually pull in the stata files and replace
+
 tcaYears <- c(2000:2016)
-tcaDownloadDir<-"/home/conor/Dropbox/study/research/ipeds/full_tables/tca/"
+tcaDownloadDir<-"/Users/cklamann/ipeds/tca/"
 tcaSourceFiles <- data.table(file = c(paste0("IC",tcaYears,"_AY")),fy = tcaYears)
 
 tcaDownloadTables<-function( yearVec = tcaYears ){

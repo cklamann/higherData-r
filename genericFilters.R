@@ -66,6 +66,16 @@ plus2<-function(vec1,vec2){
   result  
 }
 
+#takes any number of argument
+plus3<-function(...){
+  args<-list(...)
+  res <- args[[1]]
+  for(i in 2:length(args)){
+    res <- plus2(res,args[[i]])
+  }
+  res
+}
+
 #locate a field in csv
 findField<-function(years,fieldName,dir){
   for(n in years){

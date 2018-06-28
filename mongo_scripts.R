@@ -1,5 +1,3 @@
-#takes a melted datatable and returns nested json keyed by unitid
-#opeid should become unitid....
 
 connectMongo <- function(collection,db){
   url = "mongodb://127.0.0.1:27017"
@@ -7,60 +5,35 @@ connectMongo <- function(collection,db){
 }
 
 
+#add new values or update existing
 updateSchoolData<-function(dt,conn){
+  tryCatch({length(dt[,sector]) >0}, error = function(e){stop("sector missing, did you TransformTable()?")} )
   apply(dt,1,.updateSchoolData, conn)
 }
 
 .updateSchoolData<-function(row,conn){
   query<-paste0('{"unitid":"',row[['unitid']],'","fiscal_year":"',row[['fiscal_year']],'","variable":"',row[['variable']],'"}')
   updateStatemnt = paste0('{"$set":{"unitid":"',row[['unitid']],'","fiscal_year":"',row[['fiscal_year']],'","variable":"',row[['variable']],
-                            '","instnm":"',row[['instnm']],'","state":"',row[['state']],'","sector":"',row[['sector']],'","value":',row[['value']],'}}')
+                            '","name":"',row[['name']],'","state":"',row[['state']],'","sector":"',row[['sector']],'","value":',row[['value']],'}}')
   conn$update(query, update = updateStatemnt, upsert = TRUE, multiple = FALSE)
 }
 
-updateMongoData<-function(connection,dt){
-  #connection should be to schools table
-  setDT(dt)
-  dt<-dt[!is.na(value)]
-  apply(dt,1,updateMongoDataSub,connection)
+#schoolTable should be pulled straight from database
+transformTable<-function(dataTable,schoolTable){
+  f<-as.data.table(melt.data.table(dataTable,c("unitid","fiscal_year"),variable.factor=FALSE))
+  f<-f[!is.na(f[,value])]
+  merged<-merge(f,schoolTable[,.(unitid,sector,state,name)],by="unitid")
+  merged[,c("unitid","fiscal_year","sector"):=lapply(.SD,as.character),.SDcols=c("unitid","fiscal_year","sector")]
 }
 
-updateMongoDataSub<-function(dt,connection){
-  dt<-as.data.frame(lapply(dt,as.character),stringsAsFactors = F)
-  #if data field exists and already has the year/var/value
-  filterU<-paste0('{"unitid":"',dt['unitid'],'",
-                  "data" : {  
-                    "$elemMatch" : {
-                      "$and": [
-                                  {"variable":"',dt['variable'],'"},
-                              {"fiscal_year":"',dt['fiscal_year'],'"}
-                               ]
-                      }
-                  }}')
-  filterU<-gsub(' |\\n','',filterU)
-  setU<-paste0('{"$set": {"data.$.value":',dt['value'],'}}')
-  update<-connection$update(filterU,setU,upsert=FALSE)
-  #else
-  filterP<-paste0('{"unitid":"',dt['unitid'],'"}')
-  setP<-paste0('{"$addToSet":{"data":{"fiscal_year":"',dt['fiscal_year'],'","variable":"',dt['variable'],'","value":',dt['value'],'}}}')
-  insert<-connection$update(filterP,setP,upsert=FALSE)
-} 
-
-#query to mongo will bring back datatable with nested datatable in data property
-#melt with this function, after doing whatever filtering:
-unnestData<-function(dt){
-  data<-apply(dt,1,function(x){
-    x[['data']]$unitid <-x[['unitid']]
-    x[['data']]
-  })
-  data<-rbindlist(data,fill=T)
+updateSchoolNames(dt,conn){
+  apply(dt,1,.updateSchoolNames, conn)  
 }
 
-updateLots <- function(con,dt){
-  apply(dt,1, updateMongo,con)
+updateSchoolNames(row,conn){
+  query<-paste0('{"unitid":"',row[['unitid']],'"}')
+  updateStatemnt = paste0('{"$set":{"name":"',row[['name']],'"}}')
+  conn$update(query, update = updateStatemnt, upsert = FALSE, multiple = TRUE)
 }
 
-updateMongo<-function(row,con){
-  con$update(paste0('{"_id": "', row[['id']], '"},{"$set":{"instnm":"', row[['instnm']], ' (', row[['state']], ')"}}'))
-}
 

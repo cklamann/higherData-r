@@ -5,8 +5,8 @@
 #in other words, this is freshmen...
 
 library(data.table)
-raceYears <- c(2002:2015)
-raceDownloadDir<-"/home/conor/Dropbox/study/research/ipeds/full_tables/enrollment_by_race/"
+raceYears <- c(2002:2017)
+raceDownloadDir<-"/Users/cklamann/ipeds/enrollment_by_race/"
 raceSourceFiles <- data.table(file = c(paste0("EF",raceYears,"A")),fy = raceYears)
 
 raceReturnFields<-c("unitid","american_indian_alaskan_enr","asian_or_pac_islander_enr","black_enr","hispanic_enr","white_enr","other_enr","fiscal_year")

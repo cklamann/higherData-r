@@ -1,13 +1,13 @@
 #SALyyyy
-#yyyy refers to ay, must be adjusted to fy in code
+#yyyy refers to ay, adjusted to fy in filter function
 #tables start in ay 2002-3, which is when the necessary data became available
 
 #return fields: "full_professor","associate_professor","assistant_professor","instructor","lecturer"
 
 library(data.table)
-facWageYears <- c(2002:2015)
+facWageYears <- c(2002:2017)
 facWageDownloadDir<-"/Users/cklamann/Desktop/facWage/"
-facWageSourceFiles <- data.table(file = c(paste0("SAL",2001,"_A_S"),paste0("SAL",c(2002:2011),"_A"),paste0("SAL",c(2012:2015),"_IS")),fy = facWageYears)
+facWageSourceFiles <- data.table(file = c(paste0("SAL",2001,"_A_S"),paste0("SAL",c(2002:2011),"_A"),paste0("SAL",c(2012:2016),"_IS")),fy = facWageYears)
 
 #aggregation maps:
 
@@ -16,7 +16,7 @@ facWageSourceFiles <- data.table(file = c(paste0("SAL",2001,"_A_S"),paste0("SAL"
 ##satotlt = plus(empcntm,empcntw)
 
 #also, 2002-2011 has contract field, while 2012+ is only for fac on a 9, 10, or 12 month contract
-#we take mean of 9/10/11/12 for 2002-11 and exclude less than 9 months (contract==3) to make them even
+#we take mean of 9/10/12 for 2002-11 and exclude less than 9 months (contract==3) to make them even
 
 facWageReturnFields<-c("unitid","full_professor","associate_professor","assistant_professor","instructor","lecturer","fiscal_year")
 
