@@ -76,6 +76,32 @@ plus3<-function(...){
   res
 }
 
+
+minus<-function(vec1,vec2){
+  result=vector()
+  ifelse(is.na(vec1) & is.na(vec2), 
+         result<-NA,
+         ifelse(!is.na(vec1) & !is.na(vec2),
+                result<-vec1-vec2,
+                ifelse(is.na(vec1) & !is.na(vec2),
+                       result<-vec1,
+                       result<-vec2
+                )
+         )           
+  )           
+  result  
+}
+
+#takes any number of argument
+minus3<-function(...){
+  args<-list(...)
+  res <- args[[1]]
+  for(i in 2:length(args)){
+    res <- minus(res,args[[i]])
+  }
+  res
+}
+
 #locate a field in csv
 findField<-function(years,fieldName,dir){
   for(n in years){

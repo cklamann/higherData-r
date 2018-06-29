@@ -1,6 +1,5 @@
 ##strategy:
 #each time a new one of these comes out, run this script and push
-
 library(dplyr)
 library(data.table)
 library(stringr)
@@ -28,17 +27,21 @@ hdFilterData<-function(years = hdYears){
     hdTable<-rbind(new,hdTable)
     print(paste0("finished ", n))
   }
-  
-  #below takes most recent entry for fields with multiple names
+  .transformHdTable(hdTable)
+}
+
+.transformHdTable<-function(hdTable){
   hdTable[,state:=stabbr]
-  sdcols <- !"unitid" %in% hdFilterFields
-  hdTable<-merge(hdTable[,lapply(.SD,max),by="unitid",.SDcols=c("fiscal_year","instnm")],hdTable,by=c("unitid","instnm"))
-  setnames(hdTable,c("fiscal_year.x","stabbr","instnm"),c("fiscal_year","state","name"))
+  hdTable[,name:=sub("^\\s+", "", instnm)]
+
+  hdTable<-hdTable[, .SD[which.max(fiscal_year)],by=unitid]
+  
   #build unique names, with state
   dupeNames<-hdTable[,name][duplicated(hdTable[,name])]
   lapply(dupeNames, function(nm){
-    hdTable[name == nm, name:=paste0(" (",state,")")]
+    hdTable[name == nm, name:=paste0(name," (",state,")")]
   })
+  
   #build unique names, with incremement 
   dupeNames<-hdTable[,name][duplicated(hdTable[,name])]
   lapply(dupeNames, function(nm){
@@ -52,27 +55,30 @@ hdFilterData<-function(years = hdYears){
   lapply(dupeSlugs, function(slg){
     hdTable[slug == slg, slug:=make.unique(slug)]
   })
-  hdTable[,..hdReturnFields]
+  hdTable[,..hdReturnFields]  
 }
 
+#after this, want to run mongo_scripts::updateSchoolNames() with school connection
 updateSchools <-function(table, con){
-  if(nrow(table[,slug]) != nrow(table)){
+  if(length(table[,slug]) != nrow(table)){
     stop("slugs aren't unique!")
   }
-  if(nrow(table[,name]) != nrow(table)){
+  if(length(table[,name]) != nrow(table)){
     stop("names aren't unique!")
   }
-  if(nrow(table[,unitid]) != nrow(table)){
+  if(length(table[,unitid]) != nrow(table)){
     stop("unitids aren't unique!")
   }
   
   oldTable<-setDT(con$find())
+  
+  if("instnm" %in% names(oldTable)){
+    setnames(oldTable,"instnm","name")
+  }
   
   newSchools<-anti_join(table,oldTable,by="name")
   
   con$drop()
   
   con$insert(table)
-  
-  #update school_data with latest names by unitid, using anti_joined table (i.e., that of new names) for speed
 }

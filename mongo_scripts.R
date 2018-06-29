@@ -1,3 +1,4 @@
+library(mongolite)
 
 connectMongo <- function(collection,db){
   url = "mongodb://127.0.0.1:27017"
@@ -22,18 +23,25 @@ updateSchoolData<-function(dt,conn){
 transformTable<-function(dataTable,schoolTable){
   f<-as.data.table(melt.data.table(dataTable,c("unitid","fiscal_year"),variable.factor=FALSE))
   f<-f[!is.na(f[,value])]
+  
+  if(!all(unique(f[,unitid]) %in% schoolTable[,unitid])){
+      lost = length(unique(f[!f[,unitid] %in% schoolTable[,unitid],unitid]))
+      print(paste0("Omitting records from ",lost," schools with no unitid match in the schools table!"))
+      #stop("there are unitids in the school_data table that aren't in the schools table!")
+  }
+  
   merged<-merge(f,schoolTable[,.(unitid,sector,state,name)],by="unitid")
   merged[,c("unitid","fiscal_year","sector"):=lapply(.SD,as.character),.SDcols=c("unitid","fiscal_year","sector")]
 }
 
-updateSchoolNames(dt,conn){
+updateSchoolNames<-function(dt,conn){
   apply(dt,1,.updateSchoolNames, conn)  
 }
 
-updateSchoolNames(row,conn){
+updateSchoolNames<-function(row,conn){
   query<-paste0('{"unitid":"',row[['unitid']],'"}')
-  updateStatemnt = paste0('{"$set":{"name":"',row[['name']],'"}}')
-  conn$update(query, update = updateStatemnt, upsert = FALSE, multiple = TRUE)
+  updateStatement = paste0('{"$set":{"name":"',row[['name']],'"}}')
+  conn$update(query, update = updateStatement, upsert = FALSE, multiple = TRUE)
 }
 
 
