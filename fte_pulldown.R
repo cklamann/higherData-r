@@ -20,9 +20,14 @@
 # 52 = pt g
 
 library(data.table)
-fteYears <- c(2002:2016)
-fteDownloadDir<-"/Users/cklamann/ipeds/enrollment_by_race/"
+fteYears <- c(2002:2017)
+fteDownloadDir<-"/home/conor/higherData-r/data/ipeds/fte/"
 fteSourceFiles <- data.table(file = c(paste0("EF",fteYears,"A")),fy = fteYears)
+
+fteDownload<-function(filenames,destFolder){
+  download(fteSourceFiles,fteYears,fteDownloadDir)
+}
+
 
 #through 2007, efrace24 is eftotlt
 

@@ -5,7 +5,6 @@ connectMongo <- function(collection,db){
   mongo(collection = collection, db= db,url = url)
 }
 
-
 #add new values or update existing
 updateSchoolData<-function(dt,conn){
   tryCatch({length(dt[,sector]) >0}, error = function(e){stop("sector missing, did you TransformTable()?")} )
@@ -23,7 +22,6 @@ updateSchoolData<-function(dt,conn){
 transformTable<-function(dataTable,schoolTable){
   f<-as.data.table(melt.data.table(dataTable,c("unitid","fiscal_year"),variable.factor=FALSE))
   f<-f[!is.na(f[,value])]
-  
   if(!all(unique(f[,unitid]) %in% schoolTable[,unitid])){
       lost = length(unique(f[!f[,unitid] %in% schoolTable[,unitid],unitid]))
       print(paste0("Omitting records from ",lost," schools with no unitid match in the schools table!"))

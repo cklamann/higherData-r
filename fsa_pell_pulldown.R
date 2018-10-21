@@ -1,6 +1,6 @@
 ###NOTE: problems at every turn, ended up downloading and cleaning manually
 library(data.table)
-library(bit64)
+#@@library(bit64)
 
 #currently (2017) returns these variables:
 
@@ -17,9 +17,21 @@ library(bit64)
 
 fsaPellYears <- c(2001:2017)
 
-fsaDownloadUrl <- "http://studentaid.gov/sites/default/files/fsawg/datacenter/library/"
+fsaPellDownloadUrl <- "http://studentaid.gov/sites/default/files/fsawg/datacenter/library/"
 
-fsaPellDownloadDir<-"/home/conor/Dropbox/study/research/fsa/pell/csvs/"
+fsaPellDownloadDir<-"/home/conor/higherData-r/data/fsa/pell/"
+
+fsaPellSourceFiles <- data.table(file = c(paste0("AY",fyToAyStub2(2001:2006),"Pell.xls"),paste0("Q4",fyToAy(2007:2017),"AY.xls")),fy = fsaPellYears)
+
+#method=libcurl allows for simultaneous downloads
+fsaDownload<-function(filenames,destFolder){
+  destFile <- paste0(destFolder,filenames[['fy']],".xls")
+  download.file(url=paste0(fsaDownloadUrl,filenames[['file']]),destfile = destFile,mode="wb",method="libcurl")
+}
+
+downloadDL<-function(){
+  apply(fsaDLSourceFiles,1,fsaPellDownloadUrl,fsaPellDownloadDir)
+}
 
 ###filter function
 

@@ -3,8 +3,8 @@
 #2010 has unstandard file name (all caps) -- i downloaded it manually
 
 library(data.table)
-eapYears <- c(2002:2015)
-eapDownloadDir<-"/home/conor/Dropbox/study/research/ipeds/full_tables/eap/"
+eapYears <- c(2002:2016)
+eapDownloadDir<-"/home/conor/higherData-r/data/ipeds/eap/"
 eapSourceFiles <- data.table(file = c(paste0("EAP",eapYears)),fy = eapYears)
 
 #renaming maps:

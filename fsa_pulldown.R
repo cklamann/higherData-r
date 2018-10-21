@@ -1,108 +1,167 @@
-#note that these all have to be pulled down and cleaned manually. Hence the two
-#separate directories -- one for the raw excels, the other for the csvs that have
-#been hand-cleaned. Also note that the quarterly files contain a running total sheet attached.
+##new plan --> open up another mongo table for this, call it fsa, get name, etc from crosswalk and store
+##don't bother matching with unitids, because it won't work....
 
-grab_fsa_table<-function(){
-  value<-as.character(c("16"))
-  download_dir<-"https://studentaid.ed.gov/sites/default/files/fsawg/datacenter/library/FL_Dashboard_AY"
-  dest_dir<-"/home/conor/Desktop/"
-  for(n in 1:(length(value))){
-    download_year<-paste(20,value[n],"_",20,value[n+1],sep="")
-    #dest_file<-paste(value[n],value[n+1],".xls",sep="")
-    #download.file(paste(download_dir,download_file, sep=""),paste(dest_dir,dest_file,sep=""),mode="wb")
-    for(i in 1:4){
-      download_file<-paste(download_dir,download_year,"_Q",i,".xls", sep="")
-      dest_file<-paste(value[n],value[n+1],"q",i,".xls", sep="")
-      download.file(download_file, paste(dest_dir,dest_file,sep=""), mode="wb")
-    }
+###NOTE: coercing opeid to numeric, do the same for lookup table (removes leading zeroes)
+
+#currently (2017) returns these variables: 
+
+#[1] "dl_subsidized_undergraduate_amt_disb"   "dl_unsubsidized_undergraduate_amt_disb"
+#[3] "dl_parent_plus_amt_disb"                "dl_grad_plus_amt_disb"                 
+#[5] "dl_subsidized_graduate_amt_disb"        "dl_unsubsidized_graduate_amt_disb"     
+#[7] "ffel_subsidized_amt_disb"               "ffel_unsubsidized_amt_disb"            
+#[9] "ffel_parent_plus_amt_disb"              "ffel_grad_plus_amt_disb"  
+
+#also note that the filter function also returns _num_disb, just not uploading them
+
+##variable changes:
+##ffel: ffel_plus_amt_disb becomes ffel_parent_plus_amt_disb beginning fy 2007
+##dl: dl_plus becomes dl_parent_plus beginning fy 2007
+
+##!!!!note that the below are because they only started keeping track of ug vs g loans in 2011! -- only change plus, keep others....
+## dl_unsubsidized_amt_disb becomes dl_unsubsidized_undergraduate_amt_disb starting fy 2011
+## dl_subsidized_amt_disb becomes dl_subsidized_undergraduate_amt_disb for fy 2011 and 2012
+
+
+##working sample commands:
+#dls<-filterFsaSheets(fsaDLDownloadDir,fsaYears)
+#ffels<-filterFsaSheets(fsaFFELDownloadDir,fsaYears)
+
+#make sure we don't have totals in there... ie., a row whose `value` is half the total valueu for the whole thing
+
+#yeah opeid == 1 is storing totals in a lot of cases fuck, also, where are these opeids coming from -- ha, they're just row nums... in reverse?
+#god damn it --> well, have to redo... make sure row.names = F, I guess
+
+
+#pell name changes: [swap out num for amt for nums] --> we always take the later!
+# academic.competitiveness._amt_disb 2007,2008, 2010
+# academic.competitiveness.grant.program_amt_disb 2009
+# national.smart.program_amt_disb 2007,2008, 2010
+# national.smart.grant.program_amt_disb 2009
+# teach.grant.program_amt_disb 2009
+# teach.program_amt_disb 2010:2017
+
+library(data.table)
+library(xlsx)
+
+fsaYears <- 2001:2017
+fsaDLYears<-2001:2017
+fsaFFELYears<-2001:2010
+fsaPellYears<-2018
+
+
+#format years for remote filename
+fsaDownloadyears<-fyToAyFull(fsaDLYears,'_')
+
+fsaDownloadUrl <- "http://studentaid.gov/sites/default/files/fsawg/datacenter/library/"
+
+fsaDownloadDir<-"/home/conor/higherData-r/data/fsa/"
+fsaDLDownloadDir<-paste0(fsaDownloadDir,"dl/")
+fsaFFELDownloadDir<-paste0(fsaDownloadDir,"ffel/")
+fsaPellDownloadDir<-"/home/conor/higherData-r/data/fsa/pell/"
+# 
+fsaDLSourceFiles <- data.table(file = c(paste0("DL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"),paste0("DL_Dashboard_AY",fyToAyFull(2007:2017,'_'),"_Q4.xls")),fy = fsaDLYears)
+fsaFFELSourceFiles <- data.table(file = c(paste0("FFEL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"),paste0("FL_Dashboard_AY",fyToAyFull(2007:2010,'_'),"_Q4.xls")),fy = fsaFFELYears)
+fsaPellSourceFiles <- data.table(file = c(paste0("AY",fyToAyStub2(2001:2006),"Pell.xls"),paste0("Q4",fyToAy(2007:2017),"AY.xls")),fy = fsaPellYears)
+
+#method=libcurl allows for simultaneous downloads
+fsaDownload<-function(filenames,destFolder){
+  destFile <- paste0(destFolder,filenames[['fy']],'.xls') 
+  download.file(url=paste0(fsaDownloadUrl,filenames[['file']]),destfile = destFile,mode="wb",method="libcurl")
+}
+
+downloadDL<-function(){
+  apply(fsaDLSourceFiles,1,fsaDownload,fsaDLDownloadDir)
+}
+
+downloadFFEL<-function(){
+  apply(fsaFFELSourceFiles,1,fsaDownload,fsaFFELDownloadDir)
+}
+
+downloadPell<-function(){
+  apply(fsaPellSourceFiles,1,fsaDownload,fsaPellDownloadDir)
+}
+
+###filter functions -- filterFsaSheets is only public
+
+filterFsaSheets<-function(directory,years, extension = ".xls"){
+  filePath <- paste0(directory,years, extension)
+  config<-data.table(path=filePath,fy=years)
+  res<-apply(config,1,formatFsaFile) 
+  res<-lapply(res,melt.data.table,id.vars=c('opeid','fiscal_year'))
+  res<-do.call(rbind,res)
+  setDT(res)
+  res[,variable:=as.character(variable)]
+  res
+}
+
+#below maps the page of the full FY data to the sheet number
+#not really accurate for pell...
+pellSheetMap<-data.table(year=c(2000:2009,2010:2015,2016:2017),sheet=c(rep(1,10),rep(3,6),rep(2,2)))
+
+sheetMap <- data.table(year=c(2000:2005,2006:2017),sheet=c(rep(1,6),rep(2,12)))
+
+formatFsaFile<-function(config){
+  sheet<-.getCumulativeSheet(config[['path']])
+  bodyStartRow <- .getBodyStartRow(config[['path']], sheet) + 1
+  categoryStartRow <- bodyStartRow - 1
+  categories<-getCategories(config[['path']],sheet,categoryStartRow)
+  table<-getBody(config[['path']],categories,sheet,bodyStartRow)
+  setDT(table)
+  table[,fiscal_year:=config[['fy']]]
+  print(config[['fy']])
+  table
+}
+
+.getCumulativeSheet <-function(path, sheet = 1) {
+  row <- read.xlsx2(path,sheet,NULL,1,NULL,2,F)
+  if(!isTRUE(grep('Cumulative',row) > 0)){
+    sheet <- .getCumulativeSheet(path, sheet + 1)
+  }
+  sheet
+}
+
+.getBodyStartRow <- function(path,sheet,startRow=2) {
+  row <- read.xlsx2(path,sheet,NULL,startRow,NULL,startRow+1,F)
+  if(!isTRUE(grep('OPE',row) > 0)){
+    startRow <- .getBodyStartRow(path, sheet, startRow + 1)
+  }
+  startRow
+}
+
+getCategories<-function(filePath,whichSheet, startRow){
+  sheet<-as.data.table(read.xlsx2(filePath,sheetIndex=whichSheet,startRow = startRow))
+  cats<-names(sheet)
+  cats<-cats[-grep('X.',cats)]
+  if(length(cats) > 7){
+    str(cats)
+    stop(paste0("Looks like we're looking at the wrong row for category names",filePath))
+  }
+  cats<-tolower(cats)
+  cats<- gsub("-","",cats)
+  cats<- gsub(" ","_",cats)
+}
+
+getBody<-function(filePath,categories,whichSheet, startRow){
+  #returns a dataframe with colnames
+  sheet<-as.data.table(read.xlsx2(filePath,sheetIndex=whichSheet,startRow = startRow)) 
   
+  setnames(sheet,names(sheet),tolower(names(sheet)))
+  #subset columns we need
+  names<-names(sheet)[grep('ope|disb',names(sheet))] #pell needs rec, remove for loans...
+  if(length(names)<2 | length(names)==0){
+    str(names)
+    str(filePath)
+    stop("looks like we're looking at the wrong row for the column names... is 'rec' in the regex? ")
   }
-}
-
-merge_fsa_quarter_tables<-function(){
-  library('data.table')
-  value<-as.character(c("15"))
-  directory<-"/home/conor/Desktop/1516/"
-  for(i in 1:length(value)){
-    curr_table<-data.frame()
-    for(n in 1:4){
-      curr_table<-rbind(curr_table, read.csv(paste(directory,value[i],value[i+1],"q",n,".csv", sep=""),stringsAsFactors=FALSE))
-      #curr_table<-read.csv(paste(directory,value[i],value[i+1],"q",n,".csv", sep=""),stringsAsFactors=FALSE)
-      print(names(curr_table))
-    }  
-  curr_table<-curr_table[,c(-2,-3,-4,-5)]
-  curr_table<-lapply(curr_table, function(x) gsub("[,$]","",x))
-  curr_table<-lapply(curr_table,as.numeric)
-  curr_table<-as.data.table(curr_table)
-  str(curr_table)
-  curr_table[is.na(curr_table)]<-0
-  curr_table<-curr_table[,lapply(.SD,sum),by="OPE.ID"]
-  curr_table<-merge(curr_table, read.csv("/home/conor/Desktop/new_colleges.csv"), by="opeid")
-  fall_year<-as.numeric(paste("20",value[i],sep=""))
-  curr_table[,fall_year:=fall_year] 
-  write.csv(curr_table, file=paste("/home/conor/Dropbox/study/research/fsa/dl/",value[i],value[i+1],".csv",sep=""),row.names=FALSE)
+  sheet<-sheet[,..names]
+  #rename columns based on categories
+  if((length(sheet)-1) != (length(categories)*2)){
+    str(categories)
+    str(sheet)
+    stop(paste0("number of categories is not half the number of variables for ",filePath))
   }
+  newNames<-as.character(sapply(categories,paste0,c("_num_disb","_amt_disb")))
+  newNames<-c("opeid",newNames)
+  setnames(sheet,names(sheet),newNames)  
+  sheet
 }
-
-fix_years<-function(){ #clean up the tables that reported annual amounts only
-  library('data.table')
-  value<-as.numeric(c("15"))
-  directory<-"/home/conor/Dropbox/study/research/fsa/dl/"
-  for(i in 1:length(value)){
-    curr_table<-fread(paste(directory,value[i],value[i]+1,".csv",sep=""))
-    curr_table<-curr_table[,c(-2,-3,-4,-5)]
-    curr_table<-lapply(curr_table, function(x) gsub("[,$]","",x))
-    curr_table<-lapply(curr_table,as.numeric)
-    curr_table<-as.data.table(curr_table)
-    curr_table<-merge(curr_table, read.csv("/home/conor/Desktop/crosswalk.csv"), by="opeid")
-    fall_year<-as.numeric(paste("20",value[i],sep=""))
-    curr_table<-as.data.table(curr_table)
-    curr_table[,fall_year:=fall_year] 
-    print(head(curr_table))
-    write.csv(curr_table, file=paste("/home/conor/Dropbox/study/research/fsa/dl/",value[i],".csv",sep=""),row.names=FALSE)
-  }
-}
-
-merge_fsa_year_tables<-function(){
-  value<-as.character(c("01","02","03","04","05","06","07","08","09","10","11","12","13","14","15"))
-  directory<-"C:/Users/Conor/Dropbox/study/research/fsa/dl/"
-  frame <- data.frame()
-  for(i in 1:(length(value)-1)){
-    frame <- rbind(frame, read.csv(paste(directory, value[i],value[i+1],".csv", sep=""))) 	
-    print(value[i])
-  }
-  frame[is.na(frame)]<-0
-  write.csv(frame, file=(paste(directory,"big_one.csv", sep="")), row.names=FALSE)
-}
-
-merge_big_ones<-function(){
-  fl<-"C:/Users/Conor/Dropbox/study/research/fsa/fl/big_one_fl.csv"
-  dl<-"C:/Users/Conor/Dropbox/study/research/fsa/dl/big_one.csv"
-  frame <- data.frame()
-  frame <- rbind(frame, read.csv(fl))
-  frame <- rbind(frame, read.csv(dl),by="unitid")
-  frame<-as.data.table(frame)
-  frame<-frame[,lapply(frame,as.numeric)]
-  options(datatable.optimize=1)
-  frame<-frame[,lapply(.SD,sum),by=list(unitid,fall_year)]
-  str(frame)
-  frame<-merge(frame, read.csv("C:/Users/Conor/Desktop/colleges.csv"),by="unitid")
-  write.csv(frame, file="C:/Users/Conor/Dropbox/study/research/fsa/big_big_one.csv", row.names=FALSE)
-}
-
-cleanFL<-function(dataTable){
-  new_table<-as.data.table(lapply(dataTable, function(x) gsub("[,$]","",x)))
-  new_table<-new_table[,.(OPE.ID,fls_recipients,fls_cash_disbursed,flu_recipients,flu_cash_disbursed,flp_recipients,flp_cash_disbursed)]
-  new_table<-as.data.table(lapply(new_table,as.numeric))
-}
-
-cleanDL<-function(dataTable){
-  new_table<-as.data.table(lapply(dataTable, function(x) gsub("[,$]","",x)))
-  new_table<-new_table[,.(OPE.ID,dls_recipients,dls_cash_disbursed,dlu_recipients,dlu_cash_disbursed,dlp_recipients,dlp_cash_disbursed)]
-  new_table<-as.data.table(lapply(new_table,as.numeric))
-}
-
-getSchool<-function(dataTable){
-  row<-dataTable[OPE.ID==170600]
-}  
-

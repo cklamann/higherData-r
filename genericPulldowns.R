@@ -14,6 +14,7 @@ getRemoteFiles<-function(fileNameVec,destFolder){
   downloadDir<-"https://nces.ed.gov/ipeds/datacenter/data/"
   temp <- tempfile()
   download.file(paste0(downloadDir,fileNameVec[['unzip']]), temp)
+  str(temp)
   data <- read.csv(unz(temp,fileNameVec[['download']]))
   unlink(temp)
   write.csv(data, file = paste0(destFolder,fileNameVec['years'],".csv"), row.names=F)		
@@ -43,6 +44,14 @@ fyToAy <-function(yearVec){
   springYear<-ifelse(springYear < 10, paste0("0",springYear),springYear)
   fallYear <- ifelse(fallYear < 10,paste0("0",fallYear),fallYear)
   year<-paste0(fallYear, springYear)
+  year
+}
+
+fyToAyStub2 <-function(yearVec){
+  #given 2000, returns 2000-01
+  springYear <- substr(yearVec,3,4)
+  fallYear <- yearVec - 1
+  year<-paste0(fallYear,'-', springYear)
   year
 }
 

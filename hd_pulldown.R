@@ -4,7 +4,7 @@ library(dplyr)
 library(data.table)
 library(stringr)
 hdYears <- c(2002:2017)
-hdDownloadDir<-"/Users/cklamann/ipeds/hd/"
+hdDownloadDir<-"/home/conor/higherData-r/data/ipeds/hd/"
 hdSourceFiles <- data.table(file = c(paste0("HD",hdYears)),fy = hdYears)
 hdFilterFields <- c("unitid","instnm","instnm_key","stabbr","sector","hbcu","locale","fiscal_year")
 hdReturnFields<- c("unitid","name","state","sector","hbcu","locale","slug")
@@ -28,6 +28,17 @@ hdFilterData<-function(years = hdYears){
     print(paste0("finished ", n))
   }
   .transformHdTable(hdTable)
+}
+
+buildCrosswalk<-function(dir = hdDownloadDir, years = hdYears){
+  tabl<-lapply(years,function(year){
+    table<-fread(paste0(dir,year,'.csv'))
+    setnames(table,names(table),tolower(names(table)))
+    table[,.(opeid,unitid)]
+  })
+  tabl <- rbindlist(tabl)
+  tabl <- unique(tabl,by=c("opeid","unitid"))
+  tabl[!is.na(unitid) & !is.na(opeid)]
 }
 
 .transformHdTable<-function(hdTable){
