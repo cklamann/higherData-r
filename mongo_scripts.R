@@ -7,7 +7,8 @@ connectMongo <- function(collection,db){
 
 #add new values or update existing
 updateSchoolData<-function(dt,conn){
-  tryCatch({length(dt[,sector]) >0}, error = function(e){stop("sector missing, did you TransformTable()?")} )
+  tryCatch({length(dt[,sector]) >0}, error = function(e){stop("sector missing, did you Tr
+ansformTable()?")} )
   apply(dt,1,.updateSchoolData, conn)
 }
 
@@ -20,6 +21,7 @@ updateSchoolData<-function(dt,conn){
 
 #schoolTable should be pulled straight from database
 transformTable<-function(dataTable,schoolTable){
+  setDT(schoolTable)
   f<-as.data.table(melt.data.table(dataTable,c("unitid","fiscal_year"),variable.factor=FALSE))
   f<-f[!is.na(f[,value])]
   if(!all(unique(f[,unitid]) %in% schoolTable[,unitid])){
