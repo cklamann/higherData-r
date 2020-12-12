@@ -1,0 +1,3 @@
+# higherData-r
+
+### Collection of R scripts from an old project analyzing US higher education data. Will move to python one of these days...
