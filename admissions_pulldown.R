@@ -6,19 +6,18 @@
 #year definition
 
 library(data.table)
-admYears <- c(2001:2016)
-admDownloadDir<-"/Users/cklamann/Desktop/adm/"
-admSourceFiles <- data.table(file = c(paste0("IC",c(2001:2013)),paste0("ADM",c(2014:2016))),fy = admYears)
+admYears <- c(2001:2020)
+admSourceFiles <- data.table(file = c(paste0("IC",c(2001:2013)),paste0("ADM",c(2014:2020))),fy = admYears)
 
 #below is unnecessary because there are no field discrepancies here, but useful as reference
 admFields<-c("unitid","applcnm","applcnw","admssnw","admssnm","enrlftm","enrlftw")
-admSourceMaps<-buildFieldList(data.table(fy = 2000:2016),admFields,admFields)
+admSourceMaps<-buildFieldList(data.table(fy = 2000:2020),admFields,admFields)
 
 #fields to return
 admReturnFields<-c("unitid","total_applied","total_admitted","total_enrolled","fiscal_year")
 
-admDownloadTables<-function( yearVec = admYears ){
-  download(admSourceFiles,yearVec,admDownloadDir)
+admDownloadTables<-function(targetDirectory, yearVec = admYears ){
+  download(admSourceFiles,yearVec,targetDirectory)
 }
 
 admFilterData<-function(years = admYears){

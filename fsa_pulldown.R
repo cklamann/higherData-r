@@ -28,9 +28,7 @@
 
 #make sure we don't have totals in there... ie., a row whose `value` is half the total valueu for the whole thing
 
-#yeah opeid == 1 is storing totals in a lot of cases fuck, also, where are these opeids coming from -- ha, they're just row nums... in reverse?
-#god damn it --> well, have to redo... make sure row.names = F, I guess
-
+#yeah opeid == 1 is storing totals in a lot of cases, also, where are these opeids coming from -- ha, they're just row nums... in reverse?
 
 #pell name changes: [swap out num for amt for nums] --> we always take the later!
 # academic.competitiveness._amt_disb 2007,2008, 2010
@@ -41,47 +39,66 @@
 # teach.program_amt_disb 2010:2017
 
 library(data.table)
-library(xlsx)
+library(openxlsx)
 
-fsaYears <- 2001:2017
-fsaDLYears<-2001:2017
+fsaYears <- 2001:2020
+fsaDLYears<-2001:2020
 fsaFFELYears<-2001:2010
-fsaPellYears<-2018
+fsaPellYears<-2001:2020
 
 
 #format years for remote filename
 fsaDownloadyears<-fyToAyFull(fsaDLYears,'_')
 
-fsaDownloadUrl <- "http://studentaid.gov/sites/default/files/fsawg/datacenter/library/"
+fsaDownloadUrl <- "https://studentaid.gov/sites/default/files/"
 
-fsaDownloadDir<-"/home/conor/higherData-r/data/fsa/"
-fsaDLDownloadDir<-paste0(fsaDownloadDir,"dl/")
-fsaFFELDownloadDir<-paste0(fsaDownloadDir,"ffel/")
-fsaPellDownloadDir<-"/home/conor/higherData-r/data/fsa/pell/"
-# 
-fsaDLSourceFiles <- data.table(file = c(paste0("DL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"),paste0("DL_Dashboard_AY",fyToAyFull(2007:2017,'_'),"_Q4.xls")),fy = fsaDLYears)
+#this is the new url and quarterly counts are not cumulative!! (after 2005-6)
+"https://studentaid.gov/sites/default/files/fsawg/datacenter/library/dl-dashboard-ay2020-2021-q1.xls"
+
+#https://studentaid.gov/sites/default/files/DL_AwardYr_Summary_AY2000_2001_All.xls
+#https://studentaid.gov/sites/default/files/DL_Dashboard_AY2006_2007_Q1.xls
+#https://studentaid.gov/sites/default/files/fsawg/datacenter/library/DL_Dashboard_AY2014_2015_Q4.xls
+#https://studentaid.gov/sites/default/files/fsawg/datacenter/library/dl-dashboard-ay2018-2019-q4.xls
+
+convertToQuarter <-function(arg){
+  paste0(arg, paste0("-q", 1:4), '.xls')
+}
+
+convertToQuarterUnderscore <-function(arg){
+  paste0(arg, paste0("_Q", 1:4), '.xls')
+}
+
+fsaDLSourceFiles2000To2006 = paste0("DL_AwardYr_Summary_AY",paste0(fyToAyFull(2001:2006,'_'), '_All.xls'))
+fsaDLSourceFiles2007To2015 = as.matrix(as.list(apply(as.matrix(paste0("DL_Dashboard_AY",paste0(fyToAyFull(2007:2014,'_')))), 1, FUN=convertToQuarterUnderscore)))
+fsaDLSourceFiles2016To2018 = as.matrix(as.list(apply(as.matrix(paste0("fsawg/datacenter/library/DL_Dashboard_AY",paste0(fyToAyFull(2015:2018,'_')))), 1, FUN=convertToQuarterUnderscore)))
+fsaDLSourceFiles2019Plus = as.matrix(as.list(apply(as.matrix(paste0("fsawg/datacenter/library/dl-dashboard-ay",paste0(fyToAyFull(2019:2021,'-')))), 1, FUN=convertToQuarter)))
+
+fsaDLSourceFiles = as.matrix(c(fsaDLSourceFiles2016To2018, fsaDLSourceFiles2019Plus))
+
 fsaFFELSourceFiles <- data.table(file = c(paste0("FFEL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"),paste0("FL_Dashboard_AY",fyToAyFull(2007:2010,'_'),"_Q4.xls")),fy = fsaFFELYears)
-fsaPellSourceFiles <- data.table(file = c(paste0("AY",fyToAyStub2(2001:2006),"Pell.xls"),paste0("Q4",fyToAy(2007:2017),"AY.xls")),fy = fsaPellYears)
+fsaPellSourceFiles <- data.table(file = c(paste0("AY",fyToAyStub2(2001:2006),"Pell.xls"),paste0("Q4",fyToAy(2007:2020),"AY.xls")),fy = fsaPellYears)
 
 #method=libcurl allows for simultaneous downloads
 fsaDownload<-function(filenames,destFolder){
-  destFile <- paste0(destFolder,filenames[['fy']],'.xls') 
-  download.file(url=paste0(fsaDownloadUrl,filenames[['file']]),destfile = destFile,mode="wb",method="libcurl")
+  splt <- strsplit(filenames[[1]], '/')[[1]] 
+  destFile <- paste0(destFolder,splt[length(splt)]) 
+  download.file(url=paste0(fsaDownloadUrl,filenames),destfile = destFile,mode="wb",method="libcurl")
 }
 
-downloadDL<-function(){
-  apply(fsaDLSourceFiles,1,fsaDownload,fsaDLDownloadDir)
+downloadDL<-function(targetDir){
+  apply(fsaDLSourceFiles,1,fsaDownload,targetDir)
 }
 
-downloadFFEL<-function(){
-  apply(fsaFFELSourceFiles,1,fsaDownload,fsaFFELDownloadDir)
+downloadFFEL<-function(targetDir){
+  apply(fsaFFELSourceFiles,1,fsaDownload,targetDir)
 }
 
-downloadPell<-function(){
-  apply(fsaPellSourceFiles,1,fsaDownload,fsaPellDownloadDir)
+downloadPell<-function(targetDir){
+  apply(fsaPellSourceFiles,1,fsaDownload,targetDir)
 }
 
 ###filter functions -- filterFsaSheets is only public
+#todo: move into Python
 
 filterFsaSheets<-function(directory,years, extension = ".xls"){
   filePath <- paste0(directory,years, extension)
