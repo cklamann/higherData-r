@@ -1,3 +1,4 @@
 data/
 .RData
 connection.R
+.Rhistory
