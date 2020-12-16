@@ -6,13 +6,12 @@
 #30 = 2 yr completers in 150% of time
 
 library(data.table)
-gradRateYears <- c(2001:2016)
-gradRateDownloadDir<-"/home/conor/Dropbox/study/research/ipeds/full_tables/gradRates/"
+gradRateYears <- c(2001:2020)
 gradRateSourceFiles <- data.table(file = c(paste0("GR",gradRateYears)),fy = gradRateYears)
 
 gradRateReturnFields<-c("unitid","white_p","asian_p","black_p","hispanic_p","total_p","fiscal_year")
 
-gradRateDownloadTables<-function( yearVec = gradRateYears ){
+gradRateDownloadTables<-function(gradRateDownloadDir, yearVec = gradRateYears ){
   download(gradRateSourceFiles,yearVec,gradRateDownloadDir)
 }
 

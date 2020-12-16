@@ -1,8 +1,9 @@
 library(mongolite)
 
-connectMongo <- function(collection,db){
-  url = "mongodb://127.0.0.1:27017"
-  mongo(collection = collection, db= db,url = url)
+mongostring <- paste0("mongodb://",MONGO_USER,":",MONGO_PW,"@localhost:",MONGO_PORT,"/",MONGO_DB)
+
+connectMongo <- function(collection, url = mongostring){
+  mongo(collection=collection, url=url)
 }
 
 #add new values or update existing
@@ -38,7 +39,7 @@ updateSchoolNames<-function(dt,conn){
   apply(dt,1,.updateSchoolNames, conn)  
 }
 
-updateSchoolNames<-function(row,conn){
+.updateSchoolNames<-function(row,conn){
   query<-paste0('{"unitid":"',row[['unitid']],'"}')
   updateStatement = paste0('{"$set":{"name":"',row[['name']],'"}}')
   conn$update(query, update = updateStatement, upsert = FALSE, multiple = TRUE)

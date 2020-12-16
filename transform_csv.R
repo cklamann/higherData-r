@@ -1,4 +1,7 @@
-#cleanUp -- may not work?
+##some convenience scripts for transforming csvs
+
+library("bit64")
+
 cleanNumericTable<-function(DT){
   DT<-suppressWarnings(as.data.table(lapply(DT, as.numeric)))
   DT<-namesToLower(DT)

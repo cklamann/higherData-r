@@ -20,12 +20,11 @@
 # 52 = pt g
 
 library(data.table)
-fteYears <- c(2002:2017)
-fteDownloadDir<-"/home/conor/higherData-r/data/ipeds/fte/"
+fteYears <- c(2002:2020)
 fteSourceFiles <- data.table(file = c(paste0("EF",fteYears,"A")),fy = fteYears)
 
-fteDownload<-function(filenames,destFolder){
-  download(fteSourceFiles,fteYears,fteDownloadDir)
+fteDownload<-function(fteDownloadDir, years = fteYears){
+  download(fteSourceFiles, years, fteDownloadDir)
 }
 
 
@@ -33,7 +32,7 @@ fteDownload<-function(filenames,destFolder){
 
 fteReturnFields<-c("unitid","fiscal_year","fte_g","fte_ug")
 
-fteFilterData<-function(years = fteYears,schoolsTable){ 
+fteTransform<-function(years = fteYears, schoolsTable){ 
   fteTable<-initializeDataTable(fteReturnFields)
   for(n in years) {
     table<-fread(paste0(fteDownloadDir,n,".csv"),stringsAsFactors = F)

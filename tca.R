@@ -1,18 +1,13 @@
-#Problems with 2009:2013, no heading for unitid imported, interprets them as rownames and omits if row.names=FALSE. Names also shifted to the right.
-#Now seems as if there's a unitid heading but no unitids.... what the hell?
-
 #ICYYYY_AY
 #yyyy refers to academic year, adjusted to fiscal year in filter function
 
-#2009-2012 files are fucked (no unitid), have to manually pull in the stata files and replace
+#2009-2012 files are bad (no unitid), have to manually pull in the stata files and replace
 
-tcaYears <- c(2000:2016)
-tcaDownloadDir<-"/Users/cklamann/ipeds/tca/"
+tcaYears <- c(2000:2020)
 tcaSourceFiles <- data.table(file = c(paste0("IC",tcaYears,"_AY")),fy = tcaYears)
 
-tcaDownloadTables<-function( yearVec = tcaYears ){
-  stop("will this overwrite 2009-2012, cause the new data for those years is bad and can't be recovered!")
-  download(tcaSourceFiles,yearVec,tcaDownloadDir)
+tcaDownloadTables<-function(targetDir, yearVec = tcaYears ){
+  download(tcaSourceFiles,yearVec,targetDir)
 }
 
 tcaReturnFields<-c("unitid","in_state_tuition","in_state_fees","out_of_state_tuition","out_of_state_fees","books_and_supplies","room_and_board","other_expenses","fiscal_year")

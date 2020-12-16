@@ -3,17 +3,16 @@
 library(dplyr)
 library(data.table)
 library(stringr)
-hdYears <- c(2002:2017)
-hdDownloadDir<-"/home/conor/higherData-r/data/ipeds/hd/"
+hdYears <- c(2002:2019)
 hdSourceFiles <- data.table(file = c(paste0("HD",hdYears)),fy = hdYears)
-hdFilterFields <- c("unitid","instnm","instnm_key","stabbr","sector","hbcu","locale","fiscal_year")
-hdReturnFields<- c("unitid","name","state","sector","hbcu","locale","slug")
+hdFilterFields <- c("unitid","instnm","instnm_key","stabbr","sector","hbcu","locale","fiscal_year", "city","ein")
+hdReturnFields<- c("unitid","name","state","sector","hbcu","locale","slug", "city","ein")
 
-hdDownloadTables<-function( yearVec = hdYears ){
-  download(hdSourceFiles,yearVec,hdDownloadDir)
+hdDownloadTables<-function(targetDir, yearVec = hdYears ){
+  download(hdSourceFiles, yearVec, targetDir)
 }
 
-hdFilterData<-function(years = hdYears){ 
+hdTransformData<-function(hdDownloadDir, years = hdYears){ 
   hdTable<-initializeDataTable(hdFilterFields)
   hdTable[,instnm_key:=as.character(instnm)]
   #start with most recent year and work back
@@ -53,12 +52,14 @@ buildCrosswalk<-function(dir = hdDownloadDir, years = hdYears){
     hdTable[name == nm, name:=paste0(name," (",state,")")]
   })
   
-  #build unique names, with incremement 
+  #build unique names, with increment 
   dupeNames<-hdTable[,name][duplicated(hdTable[,name])]
   lapply(dupeNames, function(nm){
     hdTable[name == nm, name:=make.unique(name)]
   })
   #build slug
+  hdTable[,slug:=tolower(gsub(' ','-',name))]
+  hdTable[,slug:=tolower(gsub("-{2,}","-",name))]
   hdTable[,slug:=tolower(gsub(' ','-',name))]
   hdTable[,slug:=gsub('&','and',slug)]
   #protect against edge-case slug dupes

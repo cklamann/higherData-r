@@ -2,3 +2,8 @@ data/
 .RData
 connection.R
 .Rhistory
+*.doc
+*dat
+*.xls*
+*.sav
+.env

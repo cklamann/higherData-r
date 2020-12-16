@@ -72,10 +72,12 @@ fsaDLSourceFiles2000To2006 = paste0("DL_AwardYr_Summary_AY",paste0(fyToAyFull(20
 fsaDLSourceFiles2007To2015 = as.matrix(as.list(apply(as.matrix(paste0("DL_Dashboard_AY",paste0(fyToAyFull(2007:2014,'_')))), 1, FUN=convertToQuarterUnderscore)))
 fsaDLSourceFiles2016To2018 = as.matrix(as.list(apply(as.matrix(paste0("fsawg/datacenter/library/DL_Dashboard_AY",paste0(fyToAyFull(2015:2018,'_')))), 1, FUN=convertToQuarterUnderscore)))
 fsaDLSourceFiles2019Plus = as.matrix(as.list(apply(as.matrix(paste0("fsawg/datacenter/library/dl-dashboard-ay",paste0(fyToAyFull(2019:2021,'-')))), 1, FUN=convertToQuarter)))
-
 fsaDLSourceFiles = as.matrix(c(fsaDLSourceFiles2016To2018, fsaDLSourceFiles2019Plus))
 
-fsaFFELSourceFiles <- data.table(file = c(paste0("FFEL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"),paste0("FL_Dashboard_AY",fyToAyFull(2007:2010,'_'),"_Q4.xls")),fy = fsaFFELYears)
+fsaFFELSourceFiles2000To2005 <- as.matrix(paste0("FFEL_AwardYr_Summary_AY",fyToAyFull(2001:2006,'_'),"_All.xls"))
+fsaFFELSourceFiles2006To2010 <- as.matrix(as.list(apply(as.matrix(paste0("FL_Dashboard_AY",paste0(fyToAyFull(2007:2010,'_')))), 1, FUN=convertToQuarterUnderscore)))
+fsaFFELSourceFiles <- as.matrix(c(fsaFFELSourceFiles2000To2005,fsaFFELSourceFiles2006To2010))
+
 fsaPellSourceFiles <- data.table(file = c(paste0("AY",fyToAyStub2(2001:2006),"Pell.xls"),paste0("Q4",fyToAy(2007:2020),"AY.xls")),fy = fsaPellYears)
 
 #method=libcurl allows for simultaneous downloads

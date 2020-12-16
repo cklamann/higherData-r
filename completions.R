@@ -21,7 +21,7 @@ compDownloadTables<-function( yearVec = compYears ){
 }
 
 #todo: put cipMap in db, add variable_name to map, since that's what's gonna get pushed
-#also, for future -- FILL OUT cipMap for complete coverage -- can do this at work...
+#also, for future -- FILL OUT cipMap for complete coverage
 compFilterData<-function(years = compYears){ 
   roster<-namesToLower(fread(rosterFile))
   awlevelLookup<-roster[,awlevel:=ifelse(sector %in% c(1,2,3),5,ifelse(sector %in% c(4,5,6),3,NA))][,.(unitid,awlevel)]

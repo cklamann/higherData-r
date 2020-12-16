@@ -5,8 +5,7 @@
 #in other words, this is freshmen...
 
 library(data.table)
-raceYears <- c(2002:2017)
-raceDownloadDir<-"/Users/cklamann/ipeds/enrollment_by_race/"
+raceYears <- c(2002:2020)
 raceSourceFiles <- data.table(file = c(paste0("EF",raceYears,"A")),fy = raceYears)
 
 raceReturnFields<-c("unitid","american_indian_alaskan_enr","asian_or_pac_islander_enr","black_enr","hispanic_enr","white_enr","other_enr","fiscal_year")
@@ -16,7 +15,7 @@ raceReturnFields<-c("unitid","american_indian_alaskan_enr","asian_or_pac_islande
 oldCols <- c("efrace18","efrace19","efrace20","efrace21","efrace22","efrace24")
 newCols <- c("efbkaat","efaiant","efasiat","efhispt","efwhitt","eftotlt")
 
-raceDownloadTables<-function( yearVec = raceYears ){
+raceDownloadTables<-function(raceDownloadDir, yearVec = raceYears ){
   download(raceSourceFiles,yearVec,raceDownloadDir)
 }
 

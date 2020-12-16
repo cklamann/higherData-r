@@ -1,4 +1,4 @@
-#fte -- pulls from the "race" table already downloaded
+#fte -- pulls from the "enrollment_by_race" table, see enrollment_by_race.R to download data
 #can comment out line below to bring in only undergrads, but have to be careful to change save directory as well or
 	#the old values will be overwritten
 
