@@ -141,3 +141,12 @@ fyToAyFull <-function(yearVec,separator = '_'){
   year<-paste0("20",fallYear,"_","20", springYear)
   year
 }
+
+fyToAyStub2 <-function(yearVec,separator = '_'){
+  springYear <- as.numeric(substr(yearVec,3,4))
+  fallYear <- springYear - 1
+  springYear<-ifelse(springYear < 10, paste0("0",springYear),springYear)
+  fallYear <- ifelse(fallYear < 10,paste0("0",fallYear),fallYear)
+  year<-paste0("20",fallYear,separator, springYear)
+  year
+}

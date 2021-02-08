@@ -3,7 +3,7 @@
 
 #2009-2012 files are bad (no unitid), have to manually pull in the stata files and replace
 
-tcaYears <- c(2000:2020)
+tcaYears <- c(2000:2019)
 tcaSourceFiles <- data.table(file = c(paste0("IC",tcaYears,"_AY")),fy = tcaYears)
 
 tcaDownloadTables<-function(targetDir, yearVec = tcaYears ){
@@ -12,7 +12,7 @@ tcaDownloadTables<-function(targetDir, yearVec = tcaYears ){
 
 tcaReturnFields<-c("unitid","in_state_tuition","in_state_fees","out_of_state_tuition","out_of_state_fees","books_and_supplies","room_and_board","other_expenses","fiscal_year")
 
-tcaFilterData<-function(years = tcaYears){ 
+tcaTransformData<-function(tcaDownloadDir, years = tcaYears){ 
   tcaTable<-initializeDataTable(tcaReturnFields)
   for(n in years) {
     table<-as.data.table(read.csv(paste0(tcaDownloadDir,n,".csv"),stringsAsFactors = F))

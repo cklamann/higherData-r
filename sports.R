@@ -8,7 +8,7 @@ sportsReturnFields <- tolower(c("unitid","fiscal_year","STUDENTAID_MEN","STUDENT
                                 "HDCOACH_SAL_FTE_WOMN","ASCOACH_SAL_FTE_MEN", "ASCOACH_SAL_FTE_WOMN","GRND_TOTAL_REVENUE",
                                 "GRND_TOTAL_EXPENSE"))
 
-
+#server is down for now: https://ope.ed.gov/athletics/#/datafile/list
 library('xlsx') 
 sportYears1 <- c(2006:2015)
 sportYears2 <- c(2017:2020)
@@ -37,16 +37,13 @@ sportsDownloadTable<-function(targetDir){
   }
 }
 
-#table<-table[c("unitid","STUDENTAID_MEN","STUDENTAID_WOMEN","STUDENTAID_TOTAL","RECRUITEXP_MEN","RECRUITEXP_WOMEN","RECRUITEXP_TOTAL","HDCOACH_SAL_FTE_MEN","HDCOACH_SAL_FTE_WOMN","ASCOACH_SAL_FTE_MEN", "ASCOACH_SAL_FTE_WOMN","UNDUP_CT_PARTIC_MEN","UNDUP_CT_PARTIC_WOMEN","GRND_TOTAL_REVENUE","GRND_TOTAL_EXPENSE")]
-
-filterSportsTable<-function(){
-  value<-c(2007:2017) 
-  dir<-"/home/conor/higherData-r/data/sports/"
+transformSportsTable<-function(targetDir){
+  years<-c(2007:2019) 
   sportsTable<-initializeDataTable(sportsReturnFields)
-  for(n in 1:(length(value))){
-    table<-fread(paste0(dir,value[n],".csv"))
+  for(n in 1:(length(years))){
+    table<-fread(paste0(targetDir,years[n],".csv"))
     table<-cleanNumericTable(table)
-    table[,fiscal_year:=value[n]]
+    table[,fiscal_year:=years[n]]
     sportsTable <- rbind(sportsTable,table[,..sportsReturnFields])
   }
   sportsTable

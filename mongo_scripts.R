@@ -6,7 +6,11 @@ connectMongo <- function(collection, url = mongostring){
   mongo(collection=collection, url=url)
 }
 
-#add new values or update existing
+insertSchoolData <- function(dt, conn){
+  conn$insert(dt)
+}
+
+#this is very slow and should be used only for targeted updates
 updateSchoolData<-function(dt,conn){
   tryCatch({length(dt[,sector]) >0}, error = function(e){stop("sector missing, did you Tr
 ansformTable()?")} )
@@ -21,7 +25,7 @@ ansformTable()?")} )
 }
 
 #schoolTable should be pulled straight from database
-transformTable<-function(dataTable,schoolTable){
+prepareTable<-function(dataTable,schoolTable){
   setDT(schoolTable)
   f<-as.data.table(melt.data.table(dataTable,c("unitid","fiscal_year"),variable.factor=FALSE))
   f<-f[!is.na(f[,value])]

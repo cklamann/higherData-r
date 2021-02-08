@@ -1,5 +1,5 @@
 #calculates ftes for schools
-#pulls from enrollment tables fron enrollment_by_race.R
+#pulls from enrollment tables from enrollment_by_race.R
 
 #EFyyyyA
 #yyyy refers to academic year, adjusted to fiscal year in filter function
@@ -20,7 +20,7 @@
 # 52 = pt g
 
 library(data.table)
-fteYears <- c(2002:2020)
+fteYears <- c(2002:2018)
 fteSourceFiles <- data.table(file = c(paste0("EF",fteYears,"A")),fy = fteYears)
 
 fteDownload<-function(fteDownloadDir, years = fteYears){
@@ -32,7 +32,7 @@ fteDownload<-function(fteDownloadDir, years = fteYears){
 
 fteReturnFields<-c("unitid","fiscal_year","fte_g","fte_ug")
 
-fteTransform<-function(years = fteYears, schoolsTable){ 
+fteTransform<-function(fteDownloadDir, schoolsTable, years = fteYears){ 
   fteTable<-initializeDataTable(fteReturnFields)
   for(n in years) {
     table<-fread(paste0(fteDownloadDir,n,".csv"),stringsAsFactors = F)

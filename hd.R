@@ -36,7 +36,7 @@ buildCrosswalk<-function(dir = hdDownloadDir, years = hdYears){
     table[,.(opeid,unitid)]
   })
   tabl <- rbindlist(tabl)
-  tabl <- unique(tabl,by=c("opeid","unitid"))
+  tabl <- unique(tabl,by=c("opeid"))
   tabl[!is.na(unitid) & !is.na(opeid)]
 }
 

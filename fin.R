@@ -8,7 +8,7 @@
 #public: FyyYY_F1A where yyYY = ay, e.g. 0405 is ay 0405, fy 2005
 
 library(data.table)
-finYears <- c(2017:2018)
+finYears <- c(2002:2018)
 finPrivSourceFiles <- data.table(file = c(paste0("F",fyToAy(finYears),"_F2")),fy = finYears)
 finPubSourceFiles <- data.table(file = c(paste0("F",fyToAy(finYears),"_F1A")),fy = finYears)
 finProSourceFiles <- data.table(file = c(paste0("F",fyToAy(finYears),"_F3")),fy = finYears)
@@ -27,7 +27,7 @@ finPrivVars<-c("f2a04","f2a06", "f2d01","f2d03","f2d10","f2d12")
 finPubVars<- c("f1a17","f1a18","f1b01","f1b11","f1b17","f1b05")
 finProVars<-c("total_unrest_net_assets","total_net_assets","f3d01","f3d03a","f3d05","f3d07")
 
-finFilterData<-function(targetDirectory, years = finYears){ 
+finTransformData<-function(targetDirectory, years = finYears){ 
   finTable<-initializeDataTable(finReturnFields)
   for(n in years) {
     pubTable<-as.data.table(read.csv(paste0(paste0(targetDirectory, "/pub_"),n,".csv"),stringsAsFactors = F))
@@ -43,14 +43,18 @@ finFilterData<-function(targetDirectory, years = finYears){
     setnames(pubTable,finPubVars,finNames)
     proTable<-cleanNumericTable(proTable)
     proTable[,c("total_unrest_net_assets","total_rest_net_assets"):=NA]
-    proTable[,fiscal_year:= n]
     proTable[,total_net_assets:=minus(f3a01,f3a02)]
     proTable[,gifts:=f3d04]
+    if(! "f3d03a" %in% names(proTable)){
+      proTable[,f3d03a:=0]
+    }
+    setnames(proTable,finProVars,finNames)
+    proTable[,fiscal_year:= n]
     privTable[,fiscal_year:= n]
     pubTable[,fiscal_year:= n]
     privTable<-privTable[,.SD, .SDcols = finReturnFields]
     pubTable<-pubTable[,.SD, .SDcols = finReturnFields]
-    proTable<-pubTable[,.SD, .SDcols = finReturnFields]
+    proTable<-proTable[,.SD, .SDcols = finReturnFields]
     table<-rbind(privTable,pubTable,proTable)
   	finTable<-rbind(table,finTable)
   	print(paste0("finished ", n))

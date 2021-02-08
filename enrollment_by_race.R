@@ -5,7 +5,7 @@
 #in other words, this is freshmen...
 
 library(data.table)
-raceYears <- c(2002:2020)
+raceYears <- c(2002:2018)
 raceSourceFiles <- data.table(file = c(paste0("EF",raceYears,"A")),fy = raceYears)
 
 raceReturnFields<-c("unitid","american_indian_alaskan_enr","asian_or_pac_islander_enr","black_enr","hispanic_enr","white_enr","other_enr","fiscal_year")
@@ -19,10 +19,10 @@ raceDownloadTables<-function(raceDownloadDir, yearVec = raceYears ){
   download(raceSourceFiles,yearVec,raceDownloadDir)
 }
 
-raceFilterData<-function(years = raceYears){ 
+raceTransformData<-function(targetDir, years = raceYears){ 
   raceTable<-initializeDataTable(raceReturnFields)
   for(n in years) {
-    table<-as.data.table(read.csv(paste0(raceDownloadDir,n,".csv"),stringsAsFactors = F))
+    table<-as.data.table(read.csv(paste0(targetDir,n,".csv"),stringsAsFactors = F))
     table<-cleanNumericTable(table)
     if(n<2008){
       setnames(table,oldCols,newCols)
